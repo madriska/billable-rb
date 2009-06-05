@@ -1,5 +1,10 @@
 #!/usr/local/bin/ruby
 
+# Usage:
+# - billing today
+# - billing this week
+# - billing company_name # see below
+
 $: << File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__)
 require 'billable'
