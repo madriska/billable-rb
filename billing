@@ -1,0 +1,37 @@
+#!/usr/local/bin/ruby
+
+$: << File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__)
+require 'billable'
+
+Companies = {:ea => 'Electronic Arts'}
+
+all_services = case (args = (ARGV || []).join(' '))
+  when '', 'today'
+    Billable::Service.today
+  when 'yesterday'
+    Billable::Service.find_all_by_date(Date.today - 1)
+  when 'this week'
+    Billable::Service.find_all_by_dates(Date.today.monday..Date.today)
+  else
+    @company = Companies[args.to_sym] || args.to_s
+    @csv = true
+    Billable::Service.find(:all)
+end
+
+services_by_company = all_services.group_by{|s| s.company}.to_a
+if @company
+  services_by_company = services_by_company.select{|(c,s)| c.name == @company}
+end
+
+services_by_company.each do |(company, services)|
+  puts "--- #{company ? company.name : 'No Client'} " +
+    "(#{sprintf("%.2f", services.sum{|s| s.hours})} hours, " +
+    "$#{sprintf("%.2f", services.sum{|s| s.total})}) ---"
+  services.each do |s|
+    printf("  % 4.2f  %-50s\n", s.hours, s.summary)
+  end
+  puts
+end
+
+puts "TOTAL: #{sprintf("%.2f", all_services.sum{|s| s.hours})} hours, $#{sprintf("%.2f", all_services.sum{|s| s.total})}"

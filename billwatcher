@@ -1,0 +1,28 @@
+#!/usr/local/bin/ruby
+
+require 'rubygems'
+require 'ruby-growl' # gem install ruby-growl
+
+$: << File.dirname(File.symlink?(__FILE__) ?
+  File.readlink(__FILE__) : __FILE__)
+require 'billable'
+
+$growler = Growl.new('localhost', 'ruby-growl', ['billable'], nil, 'growlme')
+
+file = File.expand_path("~/Library/Application Support/Billable/Billable.sqlite")
+last_modified = File.mtime(file)
+
+puts "Daemonizing..."
+daemonize
+
+loop do
+  if (new_last_modified = File.mtime(file)) > last_modified
+    hours = Billable::Service.today.sum{|s| s.hours}
+    dollars = Billable::Service.today.sum{|s| s.total}
+    $growler.notify("billable", "Billable", 
+      sprintf("%.2f hours, $%.2f today", hours, dollars))
+    last_modified = new_last_modified
+    sleep 3
+  end
+end
+
