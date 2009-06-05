@@ -4,7 +4,8 @@ $: << File.dirname(File.symlink?(__FILE__) ?
   File.readlink(__FILE__) : __FILE__)
 require 'billable'
 
-Companies = {:ea => 'Electronic Arts'}
+# "billing abbr" gives you data for "Company Name" client
+Companies = {:abbr => 'Company Name'}
 
 all_services = case (args = (ARGV || []).join(' '))
   when '', 'today'
